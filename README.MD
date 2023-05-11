@@ -6,11 +6,12 @@ Button component driven by ADC voltage sampling
 git clone git@github.com:myfreax/esp32-adc-button.git components/button_driver
 ```
 ```c
-#include "button.h"
 #include "button_driver.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+static const char* TAG = "BUTTON-DRIVER";
 
 void button_usb_press(int64_t time_us) {
   ESP_LOGI(TAG, "usb button press time: %lld", time_us);
