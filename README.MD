@@ -1,6 +1,10 @@
 # ESP32 ADC Button
 Button component driven by ADC voltage sampling
 
+## Dependences
+- [ESP32 ADC Component](https://github.com/myfreax/esp32-adc)
+- [ESP32 time Component](https://github.com/myfreax/esp32-time)
+
 ## Usage
 ```shell
 git submodule add git@github.com:myfreax/esp32-adc-button.git components/button_driver
@@ -40,3 +44,6 @@ void app_main(void) {
 ```
 ## Debug
 `idf.py menuconfig` -> `Button Driver` -> `Enable Button Driver Debug`
+
+## Example
+The [ESP32 Example Project](https://github.com/myfreax/esp32-example-project) demonstrates how to use IDF framework build application of reusable component
