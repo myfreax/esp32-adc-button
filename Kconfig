@@ -1,0 +1,8 @@
+menu "Button Driver"
+    orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
+    config BUTTON_DRIVER_DEBUG
+      bool "Enable Button Driver Debug"
+      default false
+      help
+        Print ADC Sample Voltage When Value Is True
+endmenu

@@ -1,0 +1,6 @@
+{
+  "C_Cpp.intelliSenseEngine": "Tag Parser",
+  "files.associations": {
+    "button_driver.h": "c"
+  }
+}
