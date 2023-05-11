@@ -2,8 +2,8 @@
 Button component driven by ADC voltage sampling
 
 ## Feature
-- Detect button press and lift event
-- Calculate button long press time
+- Detect button press and lift event and triger event callback
+- Calculate button long press time and pass it to callback funtion
 
 ## Dependences
 - [ESP32 ADC Component](https://github.com/myfreax/esp32-adc)
