@@ -3,7 +3,7 @@ Button component driven by ADC voltage sampling
 
 ## Usage
 ```shell
-git clone git@github.com:myfreax/esp32-adc-button.git components/button_driver
+git submodule add git@github.com:myfreax/esp32-adc-button.git components/button_driver
 ```
 ```c
 #include "button_driver.h"
