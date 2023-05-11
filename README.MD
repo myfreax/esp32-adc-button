@@ -1,6 +1,10 @@
 # ESP32 ADC Button
 Button component driven by ADC voltage sampling
 
+## Feature
+- Detect button press and lift event
+- Calculate button long press time
+
 ## Dependences
 - [ESP32 ADC Component](https://github.com/myfreax/esp32-adc)
 - [ESP32 time Component](https://github.com/myfreax/esp32-time)
