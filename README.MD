@@ -39,4 +39,4 @@ void app_main(void) {
 }
 ```
 ## Debug
-idf.py menuconfig -> Button Driver -> Enable Button Driver Debug
+`idf.py menuconfig` -> `Button Driver` -> `Enable Button Driver Debug`
