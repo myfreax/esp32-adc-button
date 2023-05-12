@@ -3,9 +3,10 @@
 
 #include "adc.h"
 
-typedef void (*button_callback_t)(int64_t time_us);
+typedef void (*button_callback_t)(int64_t time_us, bool state);
 
 typedef struct {
+  bool state;
   unsigned int press_time;
   unsigned int max_voltage;
   unsigned int min_voltage;
