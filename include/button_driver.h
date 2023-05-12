@@ -20,7 +20,7 @@ typedef struct {
 } buttons_config_t;
 
 typedef struct {
-  adc_channel_t channel;
+  adc_channel_t adc_channel;
   buttons_config_t* buttons_config;
 } button_driver_config_t;
 

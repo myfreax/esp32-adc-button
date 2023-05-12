@@ -31,7 +31,7 @@ button_driver_config_t* button_driver_config_create(
   button_driver_config_t* button_driver_config =
       malloc(sizeof(button_driver_config_t));
   button_driver_config->buttons_config = buttons_config;
-  button_driver_config->channel = adc_channel;
+  button_driver_config->adc_channel = adc_channel;
   return button_driver_config;
 }
 
@@ -39,11 +39,12 @@ void button_task(void* arg) {
   button_driver_config_t* button_driver_config = arg;
   buttons_config_t* config = button_driver_config->buttons_config;
   esp_adc_cal_characteristics_t* adc_chars =
-      adc_config(button_driver_config->channel, ADC_WIDTH_BIT_DEFAULT, 1100,
+      adc_config(button_driver_config->adc_channel, ADC_WIDTH_BIT_DEFAULT, 1100,
                  ADC_ATTEN_DB_11);
   struct timeval tv_now;
   while (1) {
-    uint32_t voltage = adc_voltage(button_driver_config->channel, adc_chars);
+    uint32_t voltage =
+        adc_voltage(button_driver_config->adc_channel, adc_chars);
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
     ESP_LOGI(TAG, "Voltage: %d", voltage);
 #endif
