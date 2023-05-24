@@ -15,6 +15,7 @@ button_config_t* button_create(unsigned int min_voltage,
   button_config_t* button = malloc(sizeof(button_config_t));
   button->state = false;
   button->press_time = 0;
+  button->voltage = 0;
   button->min_voltage = min_voltage;
   button->max_voltage = max_voltage;
   button->press = press;
@@ -53,16 +54,17 @@ void button_task(void* arg) {
       if (voltage < button->max_voltage && voltage > button->min_voltage) {
         int64_t time_us = time_currnet_us(&tv_now);
         if (button->press_time == 0) {
-          button->press(0, button->state);
           button->press_time = time_us;
         } else {
-          button->press(time_us - button->press_time, button->state);
+          button->press(time_us - button->press_time, button->state, voltage);
         }
       } else {
         if (button->press_time != 0) {
           button->state = (button->state == false) ? true : false;
           int64_t time_us = time_currnet_us(&tv_now);
-          button->lift(time_us - button->press_time, button->state);
+          if ((time_us - button->press_time) > 30000) {
+            button->lift(time_us - button->press_time, button->state, voltage);
+          }
           button->press_time = 0;
         }
       }
