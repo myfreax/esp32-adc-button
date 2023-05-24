@@ -4,14 +4,11 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "time.h"
-//#ifdef CONFIG_BUTTON_DRIVER_DEBUG
-const static char* TAG = "BUTTON DRIVER";
-//#endif
 
 button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
                                unsigned int max_voltage,
-                               button_callback_t press,
-                               button_callback_t lift) {
+                               button_callback_t press, button_callback_t lift,
+                               void* callback_parameter) {
   button_config_t* button = malloc(sizeof(button_config_t));
   button->group_id = group_id;
   button->state = false;
@@ -21,6 +18,7 @@ button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
   button->max_voltage = max_voltage;
   button->press = press;
   button->lift = lift;
+  button->callback_parameter = callback_parameter;
   return button;
 }
 
@@ -58,9 +56,6 @@ void button_task(void* arg) {
   while (1) {
     uint32_t voltage =
         adc_voltage(button_driver_config->adc_channel, adc_chars);
-#ifdef CONFIG_BUTTON_DRIVER_DEBUG
-    ESP_LOGI(TAG, "Voltage: %d", voltage);
-#endif
     for (unsigned char i = 0; i < config->total; i++) {
       button_config_t* button = config->buttons[i];
       if (voltage < button->max_voltage && voltage > button->min_voltage) {
@@ -68,7 +63,10 @@ void button_task(void* arg) {
         if (button->press_time == 0) {
           button->press_time = time_us;
         } else {
-          button->press(time_us - button->press_time, button->state, voltage);
+          if (button->press != NULL) {
+            button->press(button->callback_parameter,
+                          time_us - button->press_time, button->state, voltage);
+          }
         }
       } else {
         if (button->press_time != 0) {
@@ -78,7 +76,11 @@ void button_task(void* arg) {
             if (button->state) {
               reset_other_button_state(config, button);
             }
-            button->lift(time_us - button->press_time, button->state, voltage);
+            if (button->lift != NULL) {
+              button->lift(button->callback_parameter,
+                           time_us - button->press_time, button->state,
+                           voltage);
+            }
           }
           button->press_time = 0;
         }

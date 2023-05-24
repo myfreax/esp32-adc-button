@@ -3,7 +3,7 @@
 
 #include "adc.h"
 
-typedef void (*button_callback_t)(int64_t time_us, bool state,
+typedef void (*button_callback_t)(void* arg, int64_t time_us, bool state,
                                   unsigned int voltage);
 
 typedef struct {
@@ -15,6 +15,7 @@ typedef struct {
   unsigned int min_voltage;
   button_callback_t press;
   button_callback_t lift;
+  void* callback_parameter;
 } button_config_t;
 
 typedef struct {
@@ -35,4 +36,5 @@ button_driver_config_t* button_driver_config_create(button_config_t** buttons,
 
 button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
                                unsigned int max_voltage,
-                               button_callback_t press, button_callback_t lift);
+                               button_callback_t press, button_callback_t lift,
+                               void* callback_parameter);
