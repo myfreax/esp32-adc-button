@@ -1,5 +1,5 @@
 # ESP32 ADC Button
-Button component driven by ADC voltage sampling
+Button component driver by ADC voltage sampling
 
 ## Feature
 - Detect button press and lift event and triger event callback
