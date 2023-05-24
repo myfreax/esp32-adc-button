@@ -14,7 +14,7 @@ typedef struct {
   unsigned int max_voltage;
   unsigned int min_voltage;
   button_callback_t press;
-  button_callback_t lift;
+  button_callback_t release;
   void* callback_parameter;
 } button_config_t;
 
@@ -36,5 +36,5 @@ button_driver_config_t* button_driver_config_create(button_config_t** buttons,
 
 button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
                                unsigned int max_voltage,
-                               button_callback_t press, button_callback_t lift,
+                               button_callback_t press, button_callback_t release,
                                void* callback_parameter);

@@ -2,7 +2,7 @@
 Button component driver by ADC voltage sampling
 
 ## Feature
-- Detect button press and lift event and triger event callback
+- Detect button press and release event and triger event callback
 - Allow Pass custom parameter to event callback function
 - Calculate button long press time and pass it to callback function
 - Pass button open and close state to callback function
@@ -24,17 +24,17 @@ git submodule add git@github.com:myfreax/esp32-adc-button.git components/button_
 #include "freertos/task.h"
 
 void button_led_press(void* arg, int64_t time_us, bool state, uint32_t voltage) {}
-void button_led_lift(void* arg, int64_t time_us, bool state, uint32_t voltage) {}
+void button_led_release(void* arg, int64_t time_us, bool state, uint32_t voltage) {}
 
 void app_main(void) {
   static const char* TAG = "BUTTON-DRIVER";
 
   button_config_t* button_led = button_create(0, 1100, 1300, &button_led_press,
-                                              &button_led_lift, &custom_parameter);
+                                              &button_led_release, &custom_parameter);
   button_config_t* button_15 = button_create(1, 800, 1000, &button_15V_press,
-                                              &button_15_lift, NULL);
+                                              &button_15_release, NULL);
   button_config_t* button_12 = button_create(1, 300, 500, NULL,
-                                              &button_12_lift, &custom_parameter);
+                                              &button_12_release, &custom_parameter);
 
   button_config_t* buttons[3] = {button_12v, button_15v, button_24v,
                                  button_display, button_led};
