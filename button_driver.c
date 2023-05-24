@@ -4,15 +4,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "time.h"
-#ifdef CONFIG_BUTTON_DRIVER_DEBUG
+//#ifdef CONFIG_BUTTON_DRIVER_DEBUG
 const static char* TAG = "BUTTON DRIVER";
-#endif
+//#endif
 
-button_config_t* button_create(unsigned int min_voltage,
+button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
                                unsigned int max_voltage,
                                button_callback_t press,
                                button_callback_t lift) {
   button_config_t* button = malloc(sizeof(button_config_t));
+  button->group_id = group_id;
   button->state = false;
   button->press_time = 0;
   button->voltage = 0;
@@ -34,6 +35,17 @@ button_driver_config_t* button_driver_config_create(
   button_driver_config->buttons_config = buttons_config;
   button_driver_config->adc_channel = adc_channel;
   return button_driver_config;
+}
+
+void reset_other_button_state(buttons_config_t* config,
+                              button_config_t* current_button) {
+  for (unsigned char i = 0; i < config->total; i++) {
+    button_config_t* button = config->buttons[i];
+    if (button != current_button &&
+        current_button->group_id == button->group_id) {
+      button->state = false;
+    }
+  }
 }
 
 void button_task(void* arg) {
@@ -60,9 +72,12 @@ void button_task(void* arg) {
         }
       } else {
         if (button->press_time != 0) {
-          button->state = (button->state == false) ? true : false;
           int64_t time_us = time_currnet_us(&tv_now);
           if ((time_us - button->press_time) > 30000) {
+            button->state = (button->state == false) ? true : false;
+            if (button->state) {
+              reset_other_button_state(config, button);
+            }
             button->lift(time_us - button->press_time, button->state, voltage);
           }
           button->press_time = 0;
