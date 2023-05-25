@@ -15,6 +15,7 @@ button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
   button->state = false;
   button->press_time = 0;
   button->voltage = 0;
+  button->press_voltage = 0;
   button->min_voltage = min_voltage;
   button->max_voltage = max_voltage;
   button->press = press;
@@ -63,6 +64,7 @@ void button_task(void* arg) {
         int64_t time_us = time_currnet_us(&tv_now);
         if (button->press_time == 0) {
           button->press_time = time_us;
+          button->press_voltage = voltage;
         } else {
           if (button->press != NULL) {
             button->press(button->callback_parameter,
@@ -80,7 +82,7 @@ void button_task(void* arg) {
             if (button->release != NULL) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
-                              voltage);
+                              button->press_voltage);
             }
           }
           button->press_time = 0;
@@ -91,7 +93,8 @@ void button_task(void* arg) {
   }
 }
 
-void button_driver_install(button_driver_config_t* button_driver_config) {
-  xTaskCreate(&button_task, "button_task", 2048, button_driver_config, 10,
-              NULL);
+void button_driver_install(button_driver_config_t* button_driver_config,
+                           const uint32_t usStackDepth) {
+  xTaskCreate(&button_task, "button_task", usStackDepth, button_driver_config,
+              10, NULL);
 }
