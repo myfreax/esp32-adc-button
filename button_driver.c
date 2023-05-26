@@ -36,8 +36,8 @@ button_driver_config_t* button_driver_config_create(
   return button_driver_config;
 }
 
-void reset_other_button_state(buttons_config_t* config,
-                              button_config_t* current_button) {
+static void reset_other_button_state(buttons_config_t* config,
+                                     button_config_t* current_button) {
   for (unsigned char i = 0; i < config->total; i++) {
     button_config_t* button = config->buttons[i];
     if (button != current_button &&
@@ -47,7 +47,7 @@ void reset_other_button_state(buttons_config_t* config,
   }
 }
 
-void button_task(void* arg) {
+static void button_task(void* arg) {
   button_driver_config_t* button_driver_config = arg;
   buttons_config_t* config = button_driver_config->buttons_config;
   esp_adc_cal_characteristics_t* adc_chars =
