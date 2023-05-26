@@ -81,7 +81,7 @@ void button_task(void* arg) {
             if (button->release != NULL) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
-                              button->press_voltage);
+                              voltage);
             }
           }
           button->press_time = 0;
