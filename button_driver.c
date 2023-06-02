@@ -80,12 +80,17 @@ static void button_task(void* arg) {
       } else {
         if (button->press_time != 0) {
           int64_t time_us = time_currnet_us(&tv_now);
-          if ((time_us - button->press_time) > 30000) {
+          if ((time_us - button->press_time) > 30000 &&
+              button->release != NULL) {
             button->state = (button->state == false) ? true : false;
             if (button->state) {
               reset_other_button_state(config, button);
             }
-            if (button->release != NULL) {
+            if (voltage > button->min_voltage) {
+              button->release(button->callback_parameter,
+                              time_us - button->press_time, button->state,
+                              voltage);
+            } else if (button_driver_config->debug) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
                               voltage);

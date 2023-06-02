@@ -1,22 +1,28 @@
 # ESP32 ADC Button
+
 Button component driver by ADC voltage sampling
 
 ## Feature
+
 - Detect button press and release event and triger event callback
 - Allow Pass custom parameter to event callback function
 - Calculate button long press time and pass it to callback function
 - Pass button open and close state to callback function
 - Allow you group button by set group id
 - Automatically reset the state of other buttons in the current group
+- Combine button support. You can press one of button then press other button
 
 ## Dependences
+
 - [ESP32 ADC Component](https://github.com/myfreax/esp32-adc)
 - [ESP32 Time Component](https://github.com/myfreax/esp32-time)
 
 ## Usage
+
 ```shell
 git submodule add git@github.com:myfreax/esp32-adc-button.git components/button_driver
 ```
+
 ```c
 #include "button_driver.h"
 #include "esp_log.h"
@@ -52,4 +58,5 @@ void app_main(void) {
 ```
 
 ## Example
+
 The [ESP32 Example Project](https://github.com/myfreax/esp32-example-project) demonstrates how to use IDF framework build application of reusable component
