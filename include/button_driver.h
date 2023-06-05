@@ -9,6 +9,7 @@ typedef void (*button_callback_t)(void* arg, int64_t time_us, bool state,
 typedef struct {
   unsigned char group_id;
   bool state;
+  bool once_press;
   unsigned int voltage;
   unsigned int press_time;
   unsigned int max_voltage;
@@ -16,6 +17,7 @@ typedef struct {
   unsigned int press_voltage;
   button_callback_t press;
   button_callback_t release;
+  button_callback_t press_once;
   void* callback_parameter;
 } button_config_t;
 
@@ -42,4 +44,5 @@ button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
                                unsigned int max_voltage,
                                button_callback_t press,
                                button_callback_t release,
+                               button_callback_t press_once,
                                void* callback_parameter);

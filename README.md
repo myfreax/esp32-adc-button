@@ -11,6 +11,7 @@ Button component driver by ADC voltage sampling
 - Allow you group button by set group id
 - Automatically reset the state of other buttons in the current group
 - Combine button support. You can press one of button then press other button
+- Support press once triger event callback
 
 ## Dependences
 

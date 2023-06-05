@@ -10,10 +10,12 @@ button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
                                unsigned int max_voltage,
                                button_callback_t press,
                                button_callback_t release,
+                               button_callback_t press_once,
                                void* callback_parameter) {
   button_config_t* button = malloc(sizeof(button_config_t));
   button->group_id = group_id;
   button->state = false;
+  button->once_press = false;
   button->press_time = 0;
   button->voltage = 0;
   button->press_voltage = 0;
@@ -21,6 +23,7 @@ button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
   button->max_voltage = max_voltage;
   button->press = press;
   button->release = release;
+  button->press_once = press_once;
   button->callback_parameter = callback_parameter;
   return button;
 }
@@ -72,6 +75,13 @@ static void button_task(void* arg) {
           button->press_time = time_us;
           button->press_voltage = voltage;
         } else {
+          if (!button->once_press && button->press_once != NULL) {
+            button->press_once(button->callback_parameter,
+                               time_us - button->press_time, button->state,
+                               voltage);
+            button->once_press = true;
+          }
+
           if (button->press != NULL) {
             button->press(button->callback_parameter,
                           time_us - button->press_time, button->state, voltage);
@@ -90,10 +100,12 @@ static void button_task(void* arg) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
                               voltage);
+              button->once_press = false;
             } else if (button_driver_config->debug) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
                               voltage);
+              button->once_press = false;
             }
           }
           button->press_time = 0;
