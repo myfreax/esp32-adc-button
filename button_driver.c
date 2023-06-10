@@ -60,7 +60,6 @@ static void button_task(void* arg) {
   esp_adc_cal_characteristics_t* adc_chars =
       adc_config(button_driver_config->adc_channel, ADC_WIDTH_BIT_DEFAULT, 1100,
                  ADC_ATTEN_DB_11);
-  struct timeval tv_now;
   while (1) {
     uint32_t voltage =
         adc_voltage(button_driver_config->adc_channel, adc_chars);
@@ -70,7 +69,7 @@ static void button_task(void* arg) {
     for (unsigned char i = 0; i < config->total; i++) {
       button_config_t* button = config->buttons[i];
       if (voltage < button->max_voltage && voltage > button->min_voltage) {
-        int64_t time_us = time_currnet_us(&tv_now);
+        int64_t time_us = time_currnet_us();
         if (button->press_time == 0) {
           button->press_time = time_us;
           button->press_voltage = voltage;
@@ -89,7 +88,7 @@ static void button_task(void* arg) {
         }
       } else {
         if (button->press_time != 0) {
-          int64_t time_us = time_currnet_us(&tv_now);
+          int64_t time_us = time_currnet_us();
           if ((time_us - button->press_time) > 30000 &&
               button->release != NULL) {
             button->state = (button->state == false) ? true : false;
