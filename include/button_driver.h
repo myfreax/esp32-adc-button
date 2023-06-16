@@ -41,7 +41,7 @@ button_driver_config_t* button_driver_config_create(button_config_t** buttons,
                                                     bool debug);
 
 button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
-                               unsigned int max_voltage,
+                               unsigned int max_voltage, bool init_state,
                                button_callback_t press,
                                button_callback_t release,
                                button_callback_t press_once,

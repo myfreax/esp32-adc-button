@@ -7,14 +7,14 @@
 
 static const char* TAG = "BUTTON DRIVER";
 button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
-                               unsigned int max_voltage,
+                               unsigned int max_voltage, bool init_state,
                                button_callback_t press,
                                button_callback_t release,
                                button_callback_t press_once,
                                void* callback_parameter) {
   button_config_t* button = malloc(sizeof(button_config_t));
   button->group_id = group_id;
-  button->state = false;
+  button->state = init_state;
   button->once_press = false;
   button->press_time = 0;
   button->voltage = 0;
