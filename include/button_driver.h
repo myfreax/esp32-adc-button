@@ -2,11 +2,11 @@
 #include <stdbool.h>
 
 #include "adc.h"
+struct button;
 
 typedef void (*button_callback_t)(void* arg, int64_t time_us, bool state,
-                                  unsigned int voltage);
-
-typedef struct {
+                                  unsigned int voltage, struct button* button);
+typedef struct button {
   unsigned char group_id;
   bool state;
   bool once_press;

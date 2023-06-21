@@ -77,13 +77,14 @@ static void button_task(void* arg) {
           if (!button->once_press && button->press_once != NULL) {
             button->press_once(button->callback_parameter,
                                time_us - button->press_time, button->state,
-                               voltage);
+                               voltage, button);
             button->once_press = true;
           }
 
           if (button->press != NULL) {
             button->press(button->callback_parameter,
-                          time_us - button->press_time, button->state, voltage);
+                          time_us - button->press_time, button->state, voltage,
+                          button);
           }
         }
       } else {
@@ -98,12 +99,12 @@ static void button_task(void* arg) {
             if (voltage > button->min_voltage) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
-                              voltage);
+                              voltage, button);
               button->once_press = false;
             } else if (button_driver_config->debug) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
-                              voltage);
+                              voltage, button);
               button->once_press = false;
             }
           }
