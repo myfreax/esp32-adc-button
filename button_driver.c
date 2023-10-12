@@ -112,7 +112,7 @@ static void button_task(void* arg) {
         }
       }
     }
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(15 / portTICK_PERIOD_MS);
   }
 }
 
