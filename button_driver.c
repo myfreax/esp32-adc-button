@@ -90,7 +90,7 @@ static void button_task(void* arg) {
       } else {
         if (button->press_time != 0) {
           int64_t time_us = time_currnet_us();
-          if ((time_us - button->press_time) > 30000 &&
+          if ((time_us - button->press_time) > 60000 &&
               button->release != NULL) {
             button->state = (button->state == false) ? true : false;
             if (button->state) {
