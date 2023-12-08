@@ -33,7 +33,8 @@ typedef struct {
 } button_driver_config_t;
 
 void button_driver_install(button_driver_config_t* button_driver_config,
-                           const uint32_t usStackDepth);
+                           const uint32_t usStackDepth,
+                           unsigned int uxPriority);
 
 button_driver_config_t* button_driver_config_create(button_config_t** buttons,
                                                     unsigned char total,
