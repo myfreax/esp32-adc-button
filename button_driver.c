@@ -6,19 +6,20 @@
 #include "time.h"
 
 static const char* TAG = "BUTTON DRIVER";
-button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
+button_config_t* button_create(char* name, unsigned char grouping_id,
+                               unsigned int min_voltage,
                                unsigned int max_voltage, bool init_state,
                                button_callback_t press,
                                button_callback_t release,
                                button_callback_t press_once,
                                void* callback_parameter) {
   button_config_t* button = malloc(sizeof(button_config_t));
-  button->group_id = group_id;
+  button->grouping_id = grouping_id;
   button->state = init_state;
   button->once_press = false;
   button->press_time = 0;
   button->voltage = 0;
-  button->press_voltage = 0;
+  button->name = name;
   button->min_voltage = min_voltage;
   button->max_voltage = max_voltage;
   button->press = press;
@@ -28,10 +29,9 @@ button_config_t* button_create(unsigned char group_id, unsigned int min_voltage,
   return button;
 }
 
-button_driver_config_t* button_driver_config_create(button_config_t** buttons,
-                                                    unsigned char total,
-                                                    adc1_channel_t adc_channel,
-                                                    bool debug) {
+button_driver_config_t* button_driver_config_create(
+    button_config_t** buttons, unsigned char total, adc1_channel_t adc_channel,
+    uint8_t sampling_rate, uint32_t debounce_us, bool debug) {
   buttons_config_t* buttons_config = malloc(sizeof(buttons_config_t));
   buttons_config->total = total;
   buttons_config->buttons = buttons;
@@ -40,6 +40,8 @@ button_driver_config_t* button_driver_config_create(button_config_t** buttons,
   button_driver_config->buttons_config = buttons_config;
   button_driver_config->adc_channel = adc_channel;
   button_driver_config->debug = debug;
+  button_driver_config->sampling_rate = sampling_rate;
+  button_driver_config->debounce_us = debounce_us;
   return button_driver_config;
 }
 
@@ -48,7 +50,7 @@ static void reset_other_button_state(buttons_config_t* config,
   for (unsigned char i = 0; i < config->total; i++) {
     button_config_t* button = config->buttons[i];
     if (button != current_button &&
-        current_button->group_id == button->group_id) {
+        current_button->grouping_id == button->grouping_id) {
       button->state = false;
     }
   }
@@ -63,48 +65,57 @@ static void button_task(void* arg) {
   while (1) {
     uint32_t voltage =
         adc_voltage(button_driver_config->adc_channel, adc_chars);
-    if (button_driver_config->debug) {
-      ESP_LOGI(TAG, "Voltage: %d", voltage);
-    }
     for (unsigned char i = 0; i < config->total; i++) {
       button_config_t* button = config->buttons[i];
       if (voltage < button->max_voltage && voltage > button->min_voltage) {
         int64_t time_us = time_currnet_us();
         if (button->press_time == 0) {
           button->press_time = time_us;
-          button->press_voltage = voltage;
         } else {
           if (!button->once_press && button->press_once != NULL) {
             button->press_once(button->callback_parameter,
                                time_us - button->press_time, button->state,
-                               voltage, button);
+                               button);
             button->once_press = true;
           }
-
+          if (button_driver_config->debug) {
+            ESP_LOGI(TAG, "%s button press time: %lld state: %d voltage: %d",
+                     button->name, time_us, button->state, voltage);
+          }
           if (button->press != NULL) {
             button->press(button->callback_parameter,
-                          time_us - button->press_time, button->state, voltage,
-                          button);
+                          time_us - button->press_time, button->state, button);
           }
         }
       } else {
         if (button->press_time != 0) {
           int64_t time_us = time_currnet_us();
-          if ((time_us - button->press_time) > 60000 &&
+          if ((time_us - button->press_time) >
+                  button_driver_config->debounce_us &&
               button->release != NULL) {
-            button->state = (button->state == false) ? true : false;
+            button->state = !button->state;
             if (button->state) {
               reset_other_button_state(config, button);
             }
             if (voltage > button->min_voltage) {
+              if (button_driver_config->debug) {
+                ESP_LOGI(TAG,
+                         "%s button release time: %lld state: %d voltage: %d",
+                         button->name, time_us, button->state, voltage);
+              }
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
-                              voltage, button);
+                              button);
               button->once_press = false;
             } else if (button_driver_config->debug) {
+              if (button_driver_config->debug) {
+                ESP_LOGI(TAG,
+                         "%s button release time: %lld state: %d voltage: %d",
+                         button->name, time_us, button->state, voltage);
+              }
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
-                              voltage, button);
+                              button);
               button->once_press = false;
             }
           }
@@ -112,7 +123,7 @@ static void button_task(void* arg) {
         }
       }
     }
-    vTaskDelay(15 / portTICK_PERIOD_MS);
+    vTaskDelay(button_driver_config->sampling_rate / portTICK_PERIOD_MS);
   }
 }
 
