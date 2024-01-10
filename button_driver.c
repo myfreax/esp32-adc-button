@@ -39,7 +39,6 @@ button_driver_config_t* button_driver_config_create(
   button_driver_config_t* button_driver_config =
       malloc(sizeof(button_driver_config_t));
   button_driver_config->buttons_config = buttons_config;
-  // button_driver_config->adc_channel = adc_channel;
   button_driver_config->debug = debug;
   button_driver_config->sampling_rate = sampling_rate;
   button_driver_config->debounce_us = debounce_us;
