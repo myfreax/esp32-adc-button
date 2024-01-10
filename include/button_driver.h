@@ -6,6 +6,8 @@ struct button;
 
 typedef void (*button_callback_t)(void* arg, int64_t time_us, bool state,
                                   struct button* button);
+typedef uint32_t (*sampling_func_t)(void* arg);
+
 typedef struct button {
   char* name;
   unsigned char grouping_id;
@@ -32,6 +34,8 @@ typedef struct {
   uint8_t sampling_rate;
   uint32_t debounce_us;
   buttons_config_t* buttons_config;
+  void* sampling_parameter;
+  sampling_func_t sampling_func;
 } button_driver_config_t;
 
 void button_driver_install(button_driver_config_t* button_driver_config,
@@ -39,8 +43,9 @@ void button_driver_install(button_driver_config_t* button_driver_config,
                            unsigned int uxPriority);
 
 button_driver_config_t* button_driver_config_create(
-    button_config_t** buttons, unsigned char total, adc1_channel_t adc_channel,
-    uint8_t sampling_rate, uint32_t debounce_us, bool debug);
+    button_config_t** buttons, unsigned char total, uint8_t sampling_rate,
+    uint32_t debounce_us, void* sampling_parameter,
+    sampling_func_t sampling_func, bool debug);
 
 button_config_t* button_create(char* name, unsigned char grouping_id,
                                unsigned int min_voltage,
