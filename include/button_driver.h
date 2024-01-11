@@ -45,7 +45,7 @@ void button_driver_install(button_driver_config_t* button_driver_config,
 button_driver_config_t* button_driver_config_create(
     button_config_t** buttons, unsigned char total, uint8_t sampling_rate,
     uint32_t debounce_us, void* sampling_parameter,
-    sampling_func_t sampling_func, bool debug);
+    sampling_func_t sampling_func);
 
 button_config_t* button_create(char* name, unsigned char grouping_id,
                                unsigned int min_voltage,

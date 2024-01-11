@@ -5,7 +5,9 @@
 #include "freertos/task.h"
 #include "time.h"
 
+#ifdef CONFIG_BUTTON_DRIVER_DEBUG
 static const char* TAG = "BUTTON DRIVER";
+#endif
 button_config_t* button_create(char* name, unsigned char grouping_id,
                                unsigned int min_voltage,
                                unsigned int max_voltage, bool init_state,
@@ -32,14 +34,13 @@ button_config_t* button_create(char* name, unsigned char grouping_id,
 button_driver_config_t* button_driver_config_create(
     button_config_t** buttons, unsigned char total, uint8_t sampling_rate,
     uint32_t debounce_us, void* sampling_parameter,
-    sampling_func_t sampling_func, bool debug) {
+    sampling_func_t sampling_func) {
   buttons_config_t* buttons_config = malloc(sizeof(buttons_config_t));
   buttons_config->total = total;
   buttons_config->buttons = buttons;
   button_driver_config_t* button_driver_config =
       malloc(sizeof(button_driver_config_t));
   button_driver_config->buttons_config = buttons_config;
-  button_driver_config->debug = debug;
   button_driver_config->sampling_rate = sampling_rate;
   button_driver_config->debounce_us = debounce_us;
   button_driver_config->sampling_func = sampling_func;
@@ -65,6 +66,9 @@ static void button_task(void* arg) {
   while (1) {
     uint32_t voltage = button_driver_config->sampling_func(
         button_driver_config->sampling_parameter);
+#ifdef CONFIG_BUTTON_DRIVER_ADC_DEBUG
+    ESP_LOGI(TAG, "ADC sampling voltage: %ld", voltage);
+#endif
     for (unsigned char i = 0; i < config->total; i++) {
       button_config_t* button = config->buttons[i];
       if (voltage < button->max_voltage && voltage > button->min_voltage) {
@@ -78,10 +82,10 @@ static void button_task(void* arg) {
                                button);
             button->once_press = true;
           }
-          if (button_driver_config->debug) {
-            ESP_LOGI(TAG, "%s button press time: %lld state: %d voltage: %ld",
-                     button->name, time_us, button->state, voltage);
-          }
+#ifdef CONFIG_BUTTON_DRIVER_DEBUG
+          ESP_LOGI(TAG, "%s button press time: %lld state: %d voltage: %ld",
+                   button->name, time_us, button->state, voltage);
+#endif
           if (button->press != NULL) {
             button->press(button->callback_parameter,
                           time_us - button->press_time, button->state, button);
@@ -98,26 +102,28 @@ static void button_task(void* arg) {
               reset_other_button_state(config, button);
             }
             if (voltage > button->min_voltage) {
-              if (button_driver_config->debug) {
-                ESP_LOGI(TAG,
-                         "%s button release time: %lld state: %d voltage: %ld",
-                         button->name, time_us, button->state, voltage);
-              }
+#ifdef CONFIG_BUTTON_DRIVER_DEBUG
+              ESP_LOGI(TAG,
+                       "%s button release time: %lld state: %d voltage: %ld",
+                       button->name, time_us, button->state, voltage);
+#endif
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
                               button);
               button->once_press = false;
-            } else if (button_driver_config->debug) {
-              if (button_driver_config->debug) {
-                ESP_LOGI(TAG,
-                         "%s button release time: %lld state: %d voltage: %ld",
-                         button->name, time_us, button->state, voltage);
-              }
+
+            }
+#ifdef CONFIG_BUTTON_DRIVER_DEBUG
+            else {
+              ESP_LOGI(TAG,
+                       "%s button release time: %lld state: %d voltage: %ld",
+                       button->name, time_us, button->state, voltage);
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
                               button);
               button->once_press = false;
             }
+#endif
           }
           button->press_time = 0;
         }

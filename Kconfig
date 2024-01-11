@@ -4,5 +4,10 @@ menu "Button Driver"
       bool "Enable Button Driver Debug"
       default false
       help
-        Print ADC Sample Voltage When Value Is True
+        Print button log
+    config BUTTON_DRIVER_ADC_DEBUG
+      bool "Enable Button Driver Debug"
+      default false
+      help
+        Print ADC sampling voltage
 endmenu
