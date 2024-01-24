@@ -13,10 +13,10 @@ typedef struct button {
   unsigned char grouping_id;
   bool state;
   bool once_press;
-  unsigned int voltage;
+  unsigned int value;
   unsigned int press_time;
-  unsigned int max_voltage;
-  unsigned int min_voltage;
+  unsigned int max_value;
+  unsigned int min_value;
   button_callback_t press;
   button_callback_t release;
   button_callback_t press_once;
@@ -48,9 +48,8 @@ button_driver_config_t* button_driver_config_create(
     sampling_func_t sampling_func);
 
 button_config_t* button_create(char* name, unsigned char grouping_id,
-                               unsigned int min_voltage,
-                               unsigned int max_voltage, bool init_state,
-                               button_callback_t press,
+                               unsigned int min_value, unsigned int max_value,
+                               bool init_state, button_callback_t press,
                                button_callback_t release,
                                button_callback_t press_once,
                                void* callback_parameter);

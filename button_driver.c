@@ -9,9 +9,8 @@
 static const char* TAG = "BUTTON DRIVER";
 #endif
 button_config_t* button_create(char* name, unsigned char grouping_id,
-                               unsigned int min_voltage,
-                               unsigned int max_voltage, bool init_state,
-                               button_callback_t press,
+                               unsigned int min_value, unsigned int max_value,
+                               bool init_state, button_callback_t press,
                                button_callback_t release,
                                button_callback_t press_once,
                                void* callback_parameter) {
@@ -20,10 +19,10 @@ button_config_t* button_create(char* name, unsigned char grouping_id,
   button->state = init_state;
   button->once_press = false;
   button->press_time = 0;
-  button->voltage = 0;
+  button->value = 0;
   button->name = name;
-  button->min_voltage = min_voltage;
-  button->max_voltage = max_voltage;
+  button->min_value = min_value;
+  button->max_value = max_value;
   button->press = press;
   button->release = release;
   button->press_once = press_once;
@@ -64,14 +63,14 @@ static void button_task(void* arg) {
   buttons_config_t* config = button_driver_config->buttons_config;
 
   while (1) {
-    uint32_t voltage = button_driver_config->sampling_func(
+    uint32_t value = button_driver_config->sampling_func(
         button_driver_config->sampling_parameter);
-#ifdef CONFIG_BUTTON_DRIVER_ADC_DEBUG
-    ESP_LOGI(TAG, "ADC sampling voltage: %ld", voltage);
+#ifdef CONFIG_BUTTON_DRIVER_SAMPLING_DEBUG
+    ESP_LOGI(TAG, "Sampling value: %ld", value);
 #endif
     for (unsigned char i = 0; i < config->total; i++) {
       button_config_t* button = config->buttons[i];
-      if (voltage < button->max_voltage && voltage > button->min_voltage) {
+      if (value < button->max_value && value > button->min_value) {
         int64_t time_us = time_currnet_us();
         if (button->press_time == 0) {
           button->press_time = time_us;
@@ -83,8 +82,8 @@ static void button_task(void* arg) {
             button->once_press = true;
           }
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
-          ESP_LOGI(TAG, "%s button press time: %lld state: %d voltage: %ld",
-                   button->name, time_us, button->state, voltage);
+          ESP_LOGI(TAG, "%s button press time: %lld state: %d value: %ld",
+                   button->name, time_us, button->state, value);
 #endif
           if (button->press != NULL) {
             button->press(button->callback_parameter,
@@ -101,11 +100,10 @@ static void button_task(void* arg) {
             if (button->state) {
               reset_other_button_state(config, button);
             }
-            if (voltage > button->min_voltage) {
+            if (value > button->min_value) {
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
-              ESP_LOGI(TAG,
-                       "%s button release time: %lld state: %d voltage: %ld",
-                       button->name, time_us, button->state, voltage);
+              ESP_LOGI(TAG, "%s button release time: %lld state: %d value: %ld",
+                       button->name, time_us, button->state, value);
 #endif
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
@@ -115,9 +113,8 @@ static void button_task(void* arg) {
             }
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
             else {
-              ESP_LOGI(TAG,
-                       "%s button release time: %lld state: %d voltage: %ld",
-                       button->name, time_us, button->state, voltage);
+              ESP_LOGI(TAG, "%s button release time: %lld state: %d value: %ld",
+                       button->name, time_us, button->state, value);
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
                               button);
