@@ -134,5 +134,5 @@ void button_driver_install(button_driver_config_t* button_driver_config,
                            const uint32_t usStackDepth,
                            unsigned int uxPriority) {
   xTaskCreate(&button_task, "button_task", usStackDepth, button_driver_config,
-              10, NULL);
+              uxPriority, NULL);
 }
