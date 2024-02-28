@@ -47,6 +47,16 @@ button_driver_config_t* button_driver_config_create(
   return button_driver_config;
 }
 
+static void reset_other_button_press_time(buttons_config_t* config,
+                                          button_config_t* current_button) {
+  for (unsigned char i = 0; i < config->total; i++) {
+    button_config_t* button = config->buttons[i];
+    if (button != current_button) {
+      button->press_time = 0;
+    }
+  }
+}
+
 static void reset_other_button_state(buttons_config_t* config,
                                      button_config_t* current_button) {
   for (unsigned char i = 0; i < config->total; i++) {
@@ -61,7 +71,6 @@ static void reset_other_button_state(buttons_config_t* config,
 static void button_task(void* arg) {
   button_driver_config_t* button_driver_config = arg;
   buttons_config_t* config = button_driver_config->buttons_config;
-
   while (1) {
     uint32_t value = button_driver_config->sampling_func(
         button_driver_config->sampling_parameter);
@@ -108,8 +117,8 @@ static void button_task(void* arg) {
               button->release(button->callback_parameter,
                               time_us - button->press_time, button->state,
                               button);
+              reset_other_button_press_time(config, button);
               button->once_press = false;
-
             }
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
             else {
