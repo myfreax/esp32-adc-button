@@ -80,7 +80,7 @@ static void button_task(void* arg) {
     for (unsigned char i = 0; i < config->total; i++) {
       button_config_t* button = config->buttons[i];
       if (value < button->max_value && value > button->min_value) {
-        int64_t time_us = time_currnet_us();
+        int64_t time_us = time_current_us();
         if (button->press_time == 0) {
           button->press_time = time_us;
         } else {
@@ -101,7 +101,7 @@ static void button_task(void* arg) {
         }
       } else {
         if (button->press_time != 0) {
-          int64_t time_us = time_currnet_us();
+          int64_t time_us = time_current_us();
           if ((time_us - button->press_time) >
                   button_driver_config->debounce_us &&
               button->release != NULL) {
