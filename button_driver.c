@@ -18,7 +18,7 @@ button_config_t* button_create(char* name, unsigned char grouping_id,
   button->grouping_id = grouping_id;
   button->state = init_state;
   button->once_press = false;
-  button->press_time = 0;
+  button->start_time = 0;
   button->value = 0;
   button->name = name;
   button->min_value = min_value;
@@ -47,6 +47,16 @@ button_driver_config_t* button_driver_config_create(
   return button_driver_config;
 }
 
+static void reset_other_button_press_time(buttons_config_t* config,
+                                          button_config_t* current_button) {
+  for (unsigned char i = 0; i < config->total; i++) {
+    button_config_t* button = config->buttons[i];
+    if (button != current_button) {
+      button->start_time = 0;
+    }
+  }
+}
+
 static void reset_other_button_state(buttons_config_t* config,
                                      button_config_t* current_button) {
   for (unsigned char i = 0; i < config->total; i++) {
@@ -69,31 +79,32 @@ static void button_task(void* arg) {
     ESP_LOGI(TAG, "Sampling value: %ld", value);
 #endif
     for (unsigned char i = 0; i < config->total; i++) {
+      int64_t current_time = time_currnet_us();
       button_config_t* button = config->buttons[i];
       if (value < button->max_value && value > button->min_value) {
-        int64_t time_us = time_currnet_us();
-        if (button->press_time == 0) {
-          button->press_time = time_us;
+        if (button->start_time == 0) {
+          button->start_time = current_time;
         } else {
           if (!button->once_press && button->press_once != NULL) {
             button->press_once(button->callback_parameter,
-                               time_us - button->press_time, button->state,
+                               current_time - button->start_time, button->state,
                                button);
             button->once_press = true;
           }
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
           ESP_LOGI(TAG, "%s button press time: %lld state: %d value: %ld",
-                   button->name, time_us, button->state, value);
+                   button->name, current_time - button->start_time,
+                   button->state, value);
 #endif
           if (button->press != NULL) {
             button->press(button->callback_parameter,
-                          time_us - button->press_time, button->state, button);
+                          current_time - button->start_time, button->state,
+                          button);
           }
         }
       } else {
-        if (button->press_time != 0) {
-          int64_t time_us = time_currnet_us();
-          if ((time_us - button->press_time) >
+        if (button->start_time != 0) {
+          if ((current_time - button->start_time) >
                   button_driver_config->debounce_us &&
               button->release != NULL) {
             button->state = !button->state;
@@ -103,26 +114,29 @@ static void button_task(void* arg) {
             if (value > button->min_value) {
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
               ESP_LOGI(TAG, "%s button release time: %lld state: %d value: %ld",
-                       button->name, time_us, button->state, value);
+                       button->name, current_time - button->start_time,
+                       button->state, value);
 #endif
               button->release(button->callback_parameter,
-                              time_us - button->press_time, button->state,
+                              current_time - button->start_time, button->state,
                               button);
+              reset_other_button_press_time(config, button);
               button->once_press = false;
 
             }
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
             else {
               ESP_LOGI(TAG, "%s button release time: %lld state: %d value: %ld",
-                       button->name, time_us, button->state, value);
+                       button->name, current_time - button->start_time,
+                       button->state, value);
               button->release(button->callback_parameter,
-                              time_us - button->press_time, button->state,
+                              current_time - button->start_time, button->state,
                               button);
               button->once_press = false;
             }
 #endif
           }
-          button->press_time = 0;
+          button->start_time = 0;
         }
       }
     }

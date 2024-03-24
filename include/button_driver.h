@@ -14,7 +14,7 @@ typedef struct button {
   bool state;
   bool once_press;
   unsigned int value;
-  unsigned int press_time;
+  long long int start_time;
   unsigned int max_value;
   unsigned int min_value;
   button_callback_t press;
