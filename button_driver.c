@@ -78,7 +78,7 @@ static void button_task(void* arg) {
     ESP_LOGI(TAG, "Sampling value: %ld", value);
 #endif
     for (unsigned char i = 0; i < config->total; i++) {
-      int64_t current_time = time_currnet_us();
+      int64_t current_time = time_current_us();
       button_config_t* button = config->buttons[i];
       if (value < button->max_value && value > button->min_value) {
         if (button->start_time == 0) {
