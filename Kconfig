@@ -2,13 +2,13 @@ menu "Button Driver"
     orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
     config BUTTON_DRIVER_DEBUG
       bool "Enable Button Driver Debug"
-      default false
+      default y
       help
         Print button log
     config BUTTON_DRIVER_SAMPLING_DEBUG
       depends on BUTTON_DRIVER_DEBUG
       bool "Enable Button Driver Sampling Debug"
-      default false
+      default y
       help
         Print Sampling Value
 endmenu
