@@ -1,9 +1,9 @@
 #include "button_driver.h"
 
+#include "datetime.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "time.h"
 
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
 static const char* TAG = "BUTTON DRIVER";
