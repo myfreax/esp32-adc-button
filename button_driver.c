@@ -10,9 +10,10 @@ static const char* TAG = "BUTTON DRIVER";
 #endif
 button_config_t* button_create(char* name, unsigned char grouping_id,
                                unsigned int min_value, unsigned int max_value,
-                               bool init_state, button_callback_t press,
-                               button_callback_t release,
+                               bool init_state, button_callback_t release,
                                button_callback_t press_once,
+                               button_callback_t long_press,
+                               float long_press_time,
                                void* callback_parameter) {
   button_config_t* button = malloc(sizeof(button_config_t));
   button->grouping_id = grouping_id;
@@ -23,9 +24,11 @@ button_config_t* button_create(char* name, unsigned char grouping_id,
   button->name = name;
   button->min_value = min_value;
   button->max_value = max_value;
-  button->press = press;
   button->release = release;
   button->press_once = press_once;
+  button->long_press = long_press;
+  button->long_press_status = false;
+  button->long_press_time = long_press_time;
   button->callback_parameter = callback_parameter;
   return button;
 }
@@ -95,17 +98,27 @@ static void button_task(void* arg) {
                    button->name, current_time - button->start_time,
                    button->state, value);
 #endif
-          if (button->press != NULL) {
-            button->press(button->callback_parameter,
-                          current_time - button->start_time, button->state,
-                          button);
+          if (button->long_press != NULL) {
+            if (current_time - button->start_time >
+                    button->long_press_time * 1000 * 1000 &&
+                !button->long_press_status) {
+#ifdef CONFIG_BUTTON_DRIVER_DEBUG
+              ESP_LOGI(TAG,
+                       "%s button long press time: %lld state: %d value: %ld",
+                       button->name, current_time - button->start_time,
+                       button->state, value);
+#endif
+              button->long_press_status = true;
+              button->long_press(button->callback_parameter,
+                                 current_time - button->start_time,
+                                 button->state, button);
+            }
           }
         }
       } else {
         if (button->start_time != 0) {
           if ((current_time - button->start_time) >
-                  button_driver_config->debounce_us &&
-              button->release != NULL) {
+              button_driver_config->debounce_us) {
             button->state = !button->state;
             if (button->state) {
               reset_other_button_state(config, button);
@@ -116,21 +129,27 @@ static void button_task(void* arg) {
                        button->name, current_time - button->start_time,
                        button->state, value);
 #endif
-              button->release(button->callback_parameter,
-                              current_time - button->start_time, button->state,
-                              button);
+              if (!button->long_press_status && button->release != NULL) {
+                button->release(button->callback_parameter,
+                                current_time - button->start_time,
+                                button->state, button);
+              }
               reset_other_button_press_time(config, button);
               button->once_press = false;
+              button->long_press_status = false;
             }
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
             else {
               ESP_LOGI(TAG, "%s button release time: %lld state: %d value: %ld",
                        button->name, current_time - button->start_time,
                        button->state, value);
-              button->release(button->callback_parameter,
-                              current_time - button->start_time, button->state,
-                              button);
+              if (!button->long_press_status && button->release != NULL) {
+                button->release(button->callback_parameter,
+                                current_time - button->start_time,
+                                button->state, button);
+              }
               button->once_press = false;
+              button->long_press_status = false;
             }
 #endif
           }

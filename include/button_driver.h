@@ -1,7 +1,7 @@
 #pragma once
 #include <stdbool.h>
+#include <stdint.h>
 
-#include "adc.h"
 struct button;
 
 typedef void (*button_callback_t)(void* arg, int64_t time_us, bool state,
@@ -17,9 +17,11 @@ typedef struct button {
   long long int start_time;
   unsigned int max_value;
   unsigned int min_value;
-  button_callback_t press;
   button_callback_t release;
   button_callback_t press_once;
+  button_callback_t long_press;
+  float long_press_time;
+  bool long_press_status;
   void* callback_parameter;
 } button_config_t;
 
@@ -29,8 +31,6 @@ typedef struct {
 } buttons_config_t;
 
 typedef struct {
-  bool debug;
-  adc_channel_t adc_channel;
   uint8_t sampling_rate;
   uint32_t debounce_us;
   buttons_config_t* buttons_config;
@@ -49,7 +49,7 @@ button_driver_config_t* button_driver_config_create(
 
 button_config_t* button_create(char* name, unsigned char grouping_id,
                                unsigned int min_value, unsigned int max_value,
-                               bool init_state, button_callback_t press,
-                               button_callback_t release,
+                               bool init_state, button_callback_t release,
                                button_callback_t press_once,
-                               void* callback_parameter);
+                               button_callback_t long_press,
+                               float long_press_time, void* callback_parameter);
