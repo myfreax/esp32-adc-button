@@ -8,12 +8,22 @@
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
 static const char* TAG = "BUTTON DRIVER";
 #endif
+
+long_press_t* button_create_press(button_callback_t callback,
+                                  float long_press_time) {
+  long_press_t* button = malloc(sizeof(long_press_t));
+  button->press = callback;
+  button->time = long_press_time;
+  button->status = false;
+  return button;
+}
+
 button_config_t* button_create(char* name, unsigned char grouping_id,
                                unsigned int min_value, unsigned int max_value,
                                bool init_state, button_callback_t release,
                                button_callback_t press_once,
-                               button_callback_t long_press,
-                               float long_press_time,
+                               long_press_t** long_presses,
+                               uint8_t long_presses_length,
                                void* callback_parameter) {
   button_config_t* button = malloc(sizeof(button_config_t));
   button->grouping_id = grouping_id;
@@ -26,10 +36,10 @@ button_config_t* button_create(char* name, unsigned char grouping_id,
   button->max_value = max_value;
   button->release = release;
   button->press_once = press_once;
-  button->long_press = long_press;
   button->long_press_status = false;
-  button->long_press_time = long_press_time;
   button->callback_parameter = callback_parameter;
+  button->long_presses = long_presses;
+  button->long_presses_length = long_presses_length;
   return button;
 }
 
@@ -50,8 +60,8 @@ button_driver_config_t* button_driver_config_create(
   return button_driver_config;
 }
 
-static void reset_other_button_press_time(buttons_config_t* config,
-                                          button_config_t* current_button) {
+static void reset_press_time(buttons_config_t* config,
+                             button_config_t* current_button) {
   for (unsigned char i = 0; i < config->total; i++) {
     button_config_t* button = config->buttons[i];
     if (button != current_button) {
@@ -60,8 +70,8 @@ static void reset_other_button_press_time(buttons_config_t* config,
   }
 }
 
-static void reset_other_button_state(buttons_config_t* config,
-                                     button_config_t* current_button) {
+static void reset_state(buttons_config_t* config,
+                        button_config_t* current_button) {
   for (unsigned char i = 0; i < config->total; i++) {
     button_config_t* button = config->buttons[i];
     if (button != current_button &&
@@ -98,20 +108,29 @@ static void button_task(void* arg) {
                    button->name, current_time - button->start_time,
                    button->state, value);
 #endif
-          if (button->long_press != NULL) {
-            if (current_time - button->start_time >
-                    button->long_press_time * 1000 * 1000 &&
-                !button->long_press_status) {
+          if (button->long_presses != NULL && button->long_presses_length > 0) {
+            for (uint8_t i = 0; i < button->long_presses_length; i++) {
+              long_press_t* long_press = button->long_presses[i];
+              if (long_press != NULL) {
+                if (current_time - button->start_time >
+                        long_press->time * 1000 * 1000 &&
+                    !long_press->status) {
+                  if (long_press->press != NULL) {
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
-              ESP_LOGI(TAG,
-                       "%s button long press time: %lld state: %d value: %ld",
-                       button->name, current_time - button->start_time,
-                       button->state, value);
+                    ESP_LOGI(
+                        TAG,
+                        "%s button long press time: %lld state: %d value: %ld",
+                        button->name, current_time - button->start_time,
+                        button->state, value);
 #endif
-              button->long_press_status = true;
-              button->long_press(button->callback_parameter,
-                                 current_time - button->start_time,
-                                 button->state, button);
+                    button->long_press_status = true;
+                    long_press->status = true;
+                    long_press->press(button->callback_parameter,
+                                      current_time - button->start_time,
+                                      button->state, button);
+                  }
+                }
+              }
             }
           }
         }
@@ -121,7 +140,7 @@ static void button_task(void* arg) {
               button_driver_config->debounce_us) {
             button->state = !button->state;
             if (button->state) {
-              reset_other_button_state(config, button);
+              reset_state(config, button);
             }
             if (value > button->min_value) {
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
@@ -134,8 +153,14 @@ static void button_task(void* arg) {
                                 current_time - button->start_time,
                                 button->state, button);
               }
-              reset_other_button_press_time(config, button);
+              reset_press_time(config, button);
               button->once_press = false;
+              for (uint8_t i = 0; i < button->long_presses_length; i++) {
+                long_press_t* long_press = button->long_presses[i];
+                if (long_press != NULL) {
+                  long_press->status = false;
+                }
+              }
               button->long_press_status = false;
             }
 #ifdef CONFIG_BUTTON_DRIVER_DEBUG
@@ -149,6 +174,12 @@ static void button_task(void* arg) {
                                 button->state, button);
               }
               button->once_press = false;
+              for (uint8_t i = 0; i < button->long_presses_length; i++) {
+                long_press_t* long_press = button->long_presses[i];
+                if (long_press != NULL) {
+                  long_press->status = true;
+                }
+              }
               button->long_press_status = false;
             }
 #endif

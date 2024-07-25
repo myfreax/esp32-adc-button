@@ -8,6 +8,12 @@ typedef void (*button_callback_t)(void* arg, int64_t time_us, bool state,
                                   struct button* button);
 typedef uint32_t (*sampling_func_t)(void* arg);
 
+typedef struct {
+  button_callback_t press;
+  float time;
+  bool status;
+} long_press_t;
+
 typedef struct button {
   char* name;
   unsigned char grouping_id;
@@ -22,6 +28,8 @@ typedef struct button {
   button_callback_t long_press;
   float long_press_time;
   bool long_press_status;
+  long_press_t** long_presses;
+  uint8_t long_presses_length;
   void* callback_parameter;
 } button_config_t;
 
@@ -47,9 +55,13 @@ button_driver_config_t* button_driver_config_create(
     uint32_t debounce_us, void* sampling_parameter,
     sampling_func_t sampling_func);
 
+long_press_t* button_create_press(button_callback_t callback,
+                                  float long_press_time);
+
 button_config_t* button_create(char* name, unsigned char grouping_id,
                                unsigned int min_value, unsigned int max_value,
                                bool init_state, button_callback_t release,
                                button_callback_t press_once,
-                               button_callback_t long_press,
-                               float long_press_time, void* callback_parameter);
+                               long_press_t** long_presses,
+                               uint8_t long_presses_length,
+                               void* callback_parameter);
